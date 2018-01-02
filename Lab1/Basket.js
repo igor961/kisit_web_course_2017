@@ -11,44 +11,45 @@ var products = [{
 class ProductLineItem {
     constructor(product) {
         this.product = product;
+        this.name = product.name;
+        this.quantity = 1;
+        this.price = product.price;
+        product.inventory -= 1;
     }
-
-    get inventory() {
-        return this.product.inventory;
+    delete() {
+        this.product.inventory += this.quantity;
     }
-
-    set inventory(quan) {
-        this.product.inventory = quan;
-    }
-
-    get price() {
-        return this.product.price;
+    updateQuan(quan) {
+        this.product.inventory -= quan - this.quantity;
+        this.quantity = quan;
     }
 }
 
 
-var basket = (function () {
+var basket = (() => {
+    let myBasket = [];
     return {
-        myBasket: new Array(),
-        addProduct: function (productID) {
-            let prod = new ProductLineItem(Object.assign({}, products[productID]));
-            prod.inventory = 1;
-            return this.myBasket.push(prod);
+        addProduct: productID => {
+            const index = myBasket.findIndex((element, index, array) => element.name===products[productID].name);
+            if (index > -1) {
+                const quan = myBasket[index].quantity+1;
+                myBasket[index].updateQuan(quan);
+            } else {
+                const prod = new ProductLineItem(products[productID]);
+                return myBasket.push(prod);
+            }
         },
-        removeProduct: function (productID) {
-            return this.myBasket.splice(productID, 1);
+        removeProduct: productID => {
+            myBasket[productID].delete();
+            return myBasket.splice(productID, 1);
         },
-
-        updateProductQuantity: function (productID, quantity) {
-            let o = this.myBasket[productID];
-            o.inventory = quantity;
+        updateProductQuantity: (productID, quantity) => {
+            myBasket[productID].updateQuan(quantity);
         },
-        getTotalPrice: function () {
+        getTotalPrice: () => {
             let totalPrice = 0;
-            this.myBasket.forEach(function (cur, i, arr) {
-                totalPrice += cur.price * cur.inventory;
-            });
+            myBasket.forEach((cur, i, arr) => totalPrice += cur.price * cur.quantity);
             return totalPrice;
         }
-    }
+    };
 })();
